@@ -23,6 +23,7 @@
   let camX = 0
   let camY = 0
   let model;
+  let mainModel = new THREE.Object3D();
   let modelRotOffset = 0;// offset rotation to render
   let modelAngle = 45;
   let fileName = "duck";
@@ -57,12 +58,14 @@
   // light.shadow.mapSize.width = 1024*4;
   // light.shadow.mapSize.height = 1024*4;
   scene.add(light)
+  scene.add(mainModel)
   /*
     Utils Functions
   */
   let toRad = angle => 2 * Math.PI * (angle / 360)
   const loadGLTFFromURL = url =>{
-    if(model) scene.remove(model)
+    let c, size; // model center and size
+    if(model) mainModel.remove(model)
     let loader = new GLTFLoader()
     loader.load(url,
       (gltf) => {
@@ -82,9 +85,13 @@
                     l.shadow.mapSize.height = 2048
                 }
             })
-            model = gltf.scene
+            const box = new THREE.Box3().setFromObject( gltf.scene );		 
+            c = box.getCenter( new THREE.Vector3() );
+            size = box.getSize( new THREE.Vector3() );
+            gltf.scene.position.set( -c.x, size.y / 2 - c.y, -c.z );
+            model = gltf.scene;
             setModelAngle(modelAngle);
-            scene.add(model)
+            mainModel.add(model)
         },
         (xhr) => {
             console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
@@ -124,10 +131,10 @@
   }
   const setModelAngle = (angle) =>{
     modelAngle = angle
-    model.rotation.x = toRad(modelAngle);
+    mainModel.rotation.x = toRad(modelAngle);
   }
   const setModelRotOffset = () =>{
-    model.rotation.y = toRad(modelRotOffset);
+    mainModel.rotation.y = toRad(modelRotOffset);
     console.log(modelRotOffset)
   }
   async function uploadArchive(e) {
@@ -139,12 +146,12 @@
   }
   function renderSprite(step=0, total=7){
     if(step){
-      model.rotation.y -= toRad(360/frames);
+      mainModel.rotation.y -= toRad(360/frames);
     }else{
       /* init */
       gallery.innerHTML = "";
       rendering = true
-      model.rotation.y = 0 + toRad(modelRotOffset);
+      mainModel.rotation.y = 0 + toRad(modelRotOffset);
     }
     renderer.render( scene, camera );
     saveImage()
@@ -181,7 +188,7 @@
     if(Date.now() - last < 1000/fps) return
     else last = Date.now()
     if(model && play){
-      model.rotation.y -= toRad(360/frames);
+      mainModel.rotation.y -= toRad(360/frames);
     }
     renderer.render( scene, camera );
   };
