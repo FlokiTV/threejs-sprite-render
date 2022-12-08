@@ -75,6 +75,7 @@
                     m.receiveShadow = true
                     m.castShadow = true
                     m.material.metalness = 0;
+                    m.material.side = THREE.DoubleSide;
                     if(m.material.map) m.material.map.anisotropy = 16;
                 }
                 if (((child as THREE.Light)).isLight) {
